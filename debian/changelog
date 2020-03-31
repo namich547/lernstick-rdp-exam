@@ -1,3 +1,9 @@
+lernstick-rdp-exam (2) lenstick-10; urgency=medium
+
+  * [759ff5] fixed name and permission of sudoers file
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Tue, 31 Mar 2020 14:40:11 +0200
+
 lernstick-rdp-exam (1) lernstick-10; urgency=low
 
   * Initial release
