@@ -1,3 +1,9 @@
+lernstick-rdp-exam (3) lernstick-10; urgency=medium
+
+  * [9fa986] made download info more generic (and fixed the newlines)
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Tue, 31 Mar 2020 14:56:31 +0200
+
 lernstick-rdp-exam (2) lernstick-10; urgency=medium
 
   * [759ff5] fixed name and permission of sudoers file
