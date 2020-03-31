@@ -8,7 +8,7 @@ CONFIG_ZIP="/home/user/Schreibtisch/exam.zip"
 
 if [ ! -f $CONFIG_ZIP ]
 then
-zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\n\nPlease download the exam configuration\nfrom your Moodle account to your desktop.")"
+zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\\n\\nPlease download the exam configuration\\nto your desktop.")"
 	exit 1
 fi
 
