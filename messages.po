@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-31 14:52+0200\n"
+"POT-Creation-Date: 2020-03-31 15:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,4 +25,8 @@ msgstr ""
 
 #: usr/bin/lernstick-rdp-start-exam:34
 msgid "The signature of the exam configuration is invalid."
+msgstr ""
+
+#: usr/bin/lernstick-rdp-start-exam:39
+msgid "Could not open firewall."
 msgstr ""

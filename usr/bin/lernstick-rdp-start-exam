@@ -4,8 +4,8 @@
 . gettext.sh
 export TEXTDOMAIN=lernstick-rdp-start-exam
 
+# check if config is available
 CONFIG_ZIP="/home/user/Schreibtisch/exam.zip"
-
 if [ ! -f $CONFIG_ZIP ]
 then
 zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\\n\\nPlease download the exam configuration\\nto your desktop.")"
@@ -36,7 +36,7 @@ then
 
 elif [ $EXIT_CODE -ne 0 ]
 then
-	zenity --error --no-wrap --text "$("Could not open firewall.")"
+	zenity --error --no-wrap --text "$(gettext "Could not open firewall.")"
 	exit 1
 fi
 
