@@ -1,0 +1,7 @@
+[Desktop Entry]
+Categories=X-lernstick;
+Exec=lernstick-rdp-start-exam 
+Icon=lernstick-rdp-start-exam
+Name=Start exam
+Name[de]=Prüfung starten
+Type=Application

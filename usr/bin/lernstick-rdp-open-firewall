@@ -1,0 +1,35 @@
+#!/bin/bash
+
+CONFIG="$1"
+SIGNATURE="$2"
+
+# check signature of config
+if ! echo "$CONFIG" | openssl dgst \
+	-verify /usr/share/lernstick-rdp-exam/intermed-exam-ca.pubkey \
+	-sha256 \
+	-signature "$SIGNATURE"
+then
+	# signature was invalid
+	exit 10
+fi
+
+# parse config
+declare -A EXAM_CONFIG
+while IFS='=' read -r KEY VALUE
+do
+   EXAM_CONFIG["$KEY"]="$VALUE"
+done <<< "$CONFIG"
+echo "server: ${EXAM_CONFIG[SERVER]}"
+
+# open firewall
+open_firewall(){
+	PROTOCOL="$1"
+	if iptables -C whitelist_OUTPUT -p "$PROTOCOL" -d "${EXAM_CONFIG[SERVER]}" --dport 3389 -j ACCEPT &>/dev/null
+	then
+		echo "WARNING: firewall already opened for ${EXAM_CONFIG[SERVER]}"
+	else
+		iptables -A whitelist_OUTPUT -p "$PROTOCOL" -d "${EXAM_CONFIG[SERVER]}" --dport 3389 -j ACCEPT
+	fi
+}
+open_firewall tcp
+open_firewall udp

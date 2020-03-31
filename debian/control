@@ -1,0 +1,12 @@
+Source: lernstick-rdp-exam
+Section: misc
+Priority: optional
+Maintainer: Ronny Standtke <ronny.standtke@gmx.net>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.7.3
+
+Package: lernstick-rdp-exam
+Architecture: all
+Depends: freerdp2-x11, gettext-base, iptables, lernstick-firewall, openssl, unzip, zenity
+Description: Some scripts to start an exam via RDP
+ Some scripts to start an exam via RDP

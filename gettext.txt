@@ -1,0 +1,18 @@
+Initialisierung
+---------------
+mkdir -p po/de
+xgettext -L Shell --add-comments=## usr/bin/lernstick-rdp-start-exam
+vi messages.po #header richtig füllen
+cp messages.po po/de/lernstick-rdp-start-exam.po
+vi po/de/lernstick-rdp-start-exam.po # erste Übersetzung
+cd po; for i in *; do cd $i; msgfmt -o lernstick-rdp-start-exam.mo lernstick-rdp-start-exam.po; cd ..; done; cd ..
+cd po; for i in *; do cd $i; MDIR="../../usr/share/locale/$i/LC_MESSAGES/"; mkdir -p ${MDIR}; rm -f ${MDIR}/lernstick-rdp-start-exam.mo; cp lernstick-rdp-start-exam.mo ${MDIR}; cd ..; done; cd ..
+
+Update:
+-------
+xgettext -L Shell --add-comments=## usr/bin/lernstick-rdp-start-exam
+cd po; for i in *; do cd $i; msgmerge -U lernstick-rdp-start-exam.po ../../messages.po; cd ..; done; cd ..
+vi po/*/lernstick-rdp-start-exam.po
+cd po; for i in *; do cd $i; msgfmt -o lernstick-rdp-start-exam.mo lernstick-rdp-start-exam.po; cd ..; done; cd ..
+cd po; for i in *; do cd $i; MDIR="../../usr/share/locale/$i/LC_MESSAGES/"; mkdir -p ${MDIR}; rm -f ${MDIR}/lernstick-rdp-start-exam.mo; cp lernstick-rdp-start-exam.mo ${MDIR}; cd ..; done; cd ..
+

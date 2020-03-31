@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# gettext support
+. gettext.sh
+export TEXTDOMAIN=lernstick-rdp-start-exam
+
+CONFIG_ZIP="/home/user/Schreibtisch/exam.zip"
+
+if [ ! -f $CONFIG_ZIP ]
+then
+zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\n\nPlease download the exam configuration\nfrom your Moodle account to your desktop.")"
+	exit 1
+fi
+
+# extract config
+TMP_DIR=$(mktemp -d)
+unzip -d "$TMP_DIR" "$CONFIG_ZIP"
+
+# parse config file
+CONFIG=$(<"$TMP_DIR/exam.config")
+declare -A EXAM_CONFIG
+while IFS='=' read -r KEY VALUE
+do
+   EXAM_CONFIG["$KEY"]="$VALUE"
+done <<< "$CONFIG"
+
+# open firewall
+sudo lernstick-rdp-open-firewall "$CONFIG" "$TMP_DIR/exam.config.sig"
+EXIT_CODE=$?
+
+# error handling
+if [ $EXIT_CODE -eq 10 ]
+then
+	zenity --error --no-wrap --text "$(gettext "The signature of the exam configuration is invalid.")"
+	exit 1
+
+elif [ $EXIT_CODE -ne 0 ]
+then
+	zenity --error --no-wrap --text "$("Could not open firewall.")"
+	exit 1
+fi
+
+# start RDP connection to exam server
+xfreerdp \
+	/v:"${EXAM_CONFIG[SERVER]}" \
+	/u:"${EXAM_CONFIG[USER]}" \
+	/p:"${EXAM_CONFIG[PASSWORD]}" \
+	/cert-ignore \
+	/f \
+	/gdi:hw \
+	-wallpaper
