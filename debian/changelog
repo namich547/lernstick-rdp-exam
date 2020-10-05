@@ -1,3 +1,10 @@
+lernstick-rdp-exam (5) lernstick-10; urgency=medium
+
+  * [cdecfa] added support for RDP scaling
+  * [f704c0] added .gitignore file
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Mon, 05 Oct 2020 20:57:36 +0200
+
 lernstick-rdp-exam (4) lernstick-10; urgency=medium
 
   * [e89776] fixed gettext
