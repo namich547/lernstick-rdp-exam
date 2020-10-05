@@ -1,0 +1,7 @@
+debian/.debhelper/
+debian/files
+debian/lernstick-rdp-exam.debhelper.log
+debian/lernstick-rdp-exam.postinst.debhelper
+debian/lernstick-rdp-exam.postrm.debhelper
+debian/lernstick-rdp-exam.substvars
+debian/lernstick-rdp-exam/
