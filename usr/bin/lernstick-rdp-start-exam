@@ -1,32 +1,50 @@
 #!/bin/bash
 
-# determine scaling
-RDP_SCALE=100
-PRIMARY_DISPLAY="$(xrandr | grep -w "connected primary")"
-printf "primary display:\\n%s" "$PRIMARY_DISPLAY"
-if [ -z "$PRIMARY_DISPLAY" ]
+if [ -n "$1" ]
 then
-	echo "WARNINIG: primary display not found"
+	# user defined RDP_SCALE as command line parameter
+	case $1 in
+		100) ;&
+		140) ;&
+		180)
+			RDP_SCALE=$1
+			;;
+		*)
+			echo "The only supported RDP_SCALE parameters are 100, 140 and 180."
+			exit 1
+			;;
+	esac
 else
-	MONITOR_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* \(.*\)mm x .*mm/\1/g')
-	echo "monitor width: $MONITOR_WIDTH mm"
-	if [ "$MONITOR_WIDTH" -eq 0 ]
+	# try calculating good RDP_SCALE
+	RDP_SCALE=100
+
+	# determine scaling
+	PRIMARY_DISPLAY="$(xrandr | grep -w "connected primary")"
+	printf "primary display:\\n%s\\n" "$PRIMARY_DISPLAY"
+	if [ -z "$PRIMARY_DISPLAY" ]
 	then
-		# seen in VirtualBox
-		echo "WARNINIG: unknown monitor width"
+		echo "WARNINIG: primary display not found"
 	else
-		SCREEN_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* primary \(.*\)x.*+.*/\1/g')
-		echo "screen width: $SCREEN_WIDTH pixel"
-		DPI=$((SCREEN_WIDTH*254/MONITOR_WIDTH/10))
-		echo "DPI: $DPI"
-		SCALE=$(echo "scale=2; ${DPI}/96" | bc)
-		echo "scaling factor ($DPI/96): $SCALE"
-		if [ $(echo "($SCALE > 1.2) && ($SCALE <= 1.6)" | bc -l) -eq 1 ]
+		MONITOR_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* \(.*\)mm x .*mm/\1/g')
+		echo "monitor width: $MONITOR_WIDTH mm"
+		if [ "$MONITOR_WIDTH" -eq 0 ]
 		then
-			RDP_SCALE=140
-		elif [ $(echo "$SCALE > 1.6" | bc -l) -eq 1 ]
-		then
-			RDP_SCALE=180
+			# seen in VirtualBox
+			echo "WARNINIG: unknown monitor width"
+		else
+			SCREEN_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* primary \(.*\)x.*+.*/\1/g')
+			echo "screen width: $SCREEN_WIDTH pixels"
+			DPI=$((SCREEN_WIDTH*254/MONITOR_WIDTH/10))
+			echo "DPI: $DPI"
+			SCALE=$(echo "scale=2; ${DPI}/96" | bc)
+			echo "scaling factor ($DPI/96): $SCALE"
+			if [ "$(echo "($SCALE > 1.4) && ($SCALE <= 1.8)" | bc -l)" -eq 1 ]
+			then
+				RDP_SCALE=140
+			elif [ "$(echo "$SCALE > 1.8" | bc -l)" -eq 1 ]
+			then
+				RDP_SCALE=180
+			fi
 		fi
 	fi
 fi
