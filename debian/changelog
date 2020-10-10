@@ -1,3 +1,9 @@
+lernstick-rdp-exam (6) lernstick-10; urgency=medium
+
+  * [9e7dd4] improved RDP scaling (better thresholds, manual override)
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Sat, 10 Oct 2020 18:37:21 +0200
+
 lernstick-rdp-exam (5) lernstick-10; urgency=medium
 
   * [cdecfa] added support for RDP scaling
