@@ -90,6 +90,33 @@ then
 	exit 1
 fi
 
+# gather hardware statistics
+hasTPM="false"
+tpmVersion="none"
+if [ -c /dev/tpm0 ];then
+	hasTPM="true"
+	tpmVersion="1.2"
+	if [ -c /dev/tpmrm0 ];then
+		tpmVersion="2.0"
+	fi
+fi
+resolution=$(xrandr 2>/dev/null 2>/dev/null \
+	| grep ' connected' \
+	| grep -oE "[0-9]+x[0-9]+" \
+	| tr -d "\n")
+product=$(lshw -quiet -c "system" \
+	| grep "product" \
+	| head -n1 \
+	| cut -d':' -f2 \
+	| sed -e 's/^ *//g' \
+	| sed -e 's/ *$//g' \
+	| tr -d "\n")
+curl \
+	--header "Content-Type: application/json" \
+	--request POST \
+	--data "{\"auth\":{\"username\":\"${EXAM_CONFIG[USER]}\",\"password\":\"${EXAM_CONFIG[PASSWORD]}\"},\"hardware\":{\"display\":{\"resolution\":\"${resolution}\"},\"system\":{\"product\":\"${product}\"},\"tpm\":{\"enabled\":\"${hasTPM}\",\"version\":\"${tpmVersion}\"}}}" \
+	https://campla.adm.ds.fhnw.ch/statistics/Hardware
+
 # start RDP connection to exam server
 xfreerdp \
 	-wallpaper \
