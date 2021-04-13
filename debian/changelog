@@ -1,3 +1,9 @@
+lernstick-rdp-exam (7) lernstick-10; urgency=medium
+
+  * [2d9f3e] gather hardware statistics
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Tue, 13 Apr 2021 22:00:55 +0200
+
 lernstick-rdp-exam (6) lernstick-10; urgency=medium
 
   * [9e7dd4] improved RDP scaling (better thresholds, manual override)
