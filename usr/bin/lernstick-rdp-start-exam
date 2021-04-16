@@ -104,23 +104,26 @@ resolution=$(xrandr 2>/dev/null 2>/dev/null \
 	| grep ' connected' \
 	| grep -oE "[0-9]+x[0-9]+" \
 	| tr -d "\n")
-product=$(lshw -quiet -c "system" \
+product="$(sudo lshw -quiet -c "system" \
 	| grep "product" \
 	| head -n1 \
 	| cut -d':' -f2 \
 	| sed -e 's/^ *//g' \
 	| sed -e 's/ *$//g' \
-	| tr -d "\n")
+	| tr -d "\n")"
+echo "product=\"$product\""
+echo "resolution=\"$resolution\""
+echo "hasTPM=\"$hasTPM\""
+echo "tpmVersion=\"$tpmVersion\""
 curl \
 	--header "Content-Type: application/json" \
 	--request POST \
-	--data "{\"auth\":{\"username\":\"${EXAM_CONFIG[USER]}\",\"password\":\"${EXAM_CONFIG[PASSWORD]}\"},\"hardware\":{\"display\":{\"resolution\":\"${resolution}\"},\"system\":{\"product\":\"${product}\"},\"tpm\":{\"enabled\":\"${hasTPM}\",\"version\":\"${tpmVersion}\"}}}" \
-	https://campla.adm.ds.fhnw.ch/statistics/Hardware
+	--data "{\"auth\":{\"username\":\"${EXAM_CONFIG[USER]}\",\"password\":\"${EXAM_CONFIG[PASSWORD]}\"},\"hardware\":{\"display\":{\"resolution\":\"${resolution}\"},\"system\":{\"product\":\"${product}\"},\"tpm\":{\"enabled\":${hasTPM},\"version\":\"${tpmVersion}\"}}}" \
+	https://campla.adm.ds.fhnw.ch/rest/statistics/Hardware
 
 # start RDP connection to exam server
 xfreerdp \
 	-wallpaper \
-	/cert-ignore \
 	/gdi:hw \
 	/f \
 	/scale:$RDP_SCALE \
