@@ -1,3 +1,9 @@
+lernstick-rdp-exam (8) lernstick-10; urgency=medium
+
+  * [c996d3] fixed hardware statistics, check certificates for RDP
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Fri, 16 Apr 2021 16:29:49 +0200
+
 lernstick-rdp-exam (7) lernstick-10; urgency=medium
 
   * [2d9f3e] gather hardware statistics
