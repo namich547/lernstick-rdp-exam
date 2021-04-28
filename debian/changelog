@@ -1,3 +1,9 @@
+lernstick-rdp-exam (10) lernstick-10; urgency=medium
+
+  * [b78855] autostart exam after exam file has been downloaded
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Wed, 28 Apr 2021 21:04:50 +0200
+
 lernstick-rdp-exam (9) lernstick-10; urgency=medium
 
   * [c53c53] updated compat level
