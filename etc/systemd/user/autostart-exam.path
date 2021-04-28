@@ -1,0 +1,8 @@
+[Unit]
+Description="Exam autostart"
+
+[Path]
+PathExists=/home/user/Schreibtisch/exam.zip
+
+[Install]
+WantedBy=default.target

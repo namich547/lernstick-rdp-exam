@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-31 15:05+0200\n"
+"POT-Creation-Date: 2021-04-28 20:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,20 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: usr/bin/lernstick-rdp-start-exam:11
+#: usr/bin/lernstick-rdp-start-exam:63
 msgid ""
 "The exam configuration was not found.\\n\\nPlease download the exam "
 "configuration\\nto your desktop."
 msgstr ""
 
-#: usr/bin/lernstick-rdp-start-exam:34
+#: usr/bin/lernstick-rdp-start-exam:86
 msgid "The signature of the exam configuration is invalid."
 msgstr ""
 
-#: usr/bin/lernstick-rdp-start-exam:39
+#: usr/bin/lernstick-rdp-start-exam:91
 msgid "Could not open firewall."
+msgstr ""
+
+#: usr/bin/lernstick-rdp-start-exam:95
+msgid "Starting exam, please wait..."
 msgstr ""

@@ -56,6 +56,8 @@ export TEXTDOMAIN=lernstick-rdp-start-exam
 
 # check if config is available
 CONFIG_ZIP="/home/user/Schreibtisch/exam.zip"
+# give Firefox a short time span to finish the download
+sleep 1
 if [ ! -f $CONFIG_ZIP ]
 then
 zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\\n\\nPlease download the exam configuration\\nto your desktop.")"
@@ -89,6 +91,9 @@ then
 	zenity --error --no-wrap --text "$(gettext "Could not open firewall.")"
 	exit 1
 fi
+
+zenity --progress --pulsate --no-cancel --text "$(gettext "Starting exam, please wait...")" &
+ZENITY_PID=$!
 
 # gather hardware statistics
 hasTPM="false"
@@ -130,3 +135,5 @@ xfreerdp \
 	/u:"${EXAM_CONFIG[USER]}" \
 	/p:"${EXAM_CONFIG[PASSWORD]}" \
 	/v:"${EXAM_CONFIG[SERVER]}"
+
+kill $ZENITY_PID
