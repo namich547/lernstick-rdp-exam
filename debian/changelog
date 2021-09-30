@@ -1,3 +1,10 @@
+lernstick-rdp-exam (11) lernstick-11; urgency=medium
+
+  * [070883] updated .gitignore file
+  * [6a55be] added support for JSON exam files (thanks to Simon Kaspar)
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Fri, 01 Oct 2021 00:29:33 +0200
+
 lernstick-rdp-exam (10) lernstick-10; urgency=medium
 
   * [b78855] autostart exam after exam file has been downloaded
