@@ -1,0 +1,116 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "exam_type"
+  ],
+  "oneOf": [
+    {
+      "properties": {
+        "version": {
+          "type": "integer"
+        },
+        "exam_type": {
+          "const": "dummy"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "version": {
+          "type": "integer"
+        },
+        "exam_type": {
+          "const": "web"
+        },
+        "instance_id": {
+          "type": "string"
+        },
+        "instance_token": {
+          "type": "string"
+        },
+        "web_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "network_profile": {
+          "type": "object",
+          "properties": {
+            "proxy": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "format": "regex"
+              }
+            }
+          },
+          "dependentRequired": {
+            "network_profile": [
+              "proxy"
+            ]
+          },
+          "additionalProperties": false
+        }
+      },
+      "dependentRequired": {
+        "exam_type": [
+          "web_url",
+          "network_profile",
+          "instance_id",
+          "instance_token"
+        ]
+      },
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "version": {
+          "type": "integer"
+        },
+        "exam_type": {
+          "const": "vm"
+        },
+        "instance_id": {
+          "type": "string"
+        },
+        "instance_token": {
+          "type": "string"
+        },
+        "vm_server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "hostname"
+            },
+            {
+              "type": "string",
+              "format": "ipv4"
+            },
+            {
+              "type": "string",
+              "format": "ipv6"
+            }
+          ]
+        },
+        "vm_user": {
+          "type": "string"
+        },
+        "vm_password": {
+          "type": "string"
+        }
+      },
+      "dependentRequired": {
+        "exam_type": [
+          "vm_server",
+          "vm_user",
+          "vm_password",
+          "instance_id",
+          "instance_token"
+        ]
+      },
+      "additionalProperties": false
+    }
+  ]
+}

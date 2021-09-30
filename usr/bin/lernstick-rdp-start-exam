@@ -1,84 +1,295 @@
 #!/bin/bash
+# Name        : lernstick-exam-start
+# Description : Starts an examination according to given examination configuration
+# Author      : Ronny Standtke, Simon Kaspar
+# Version     : 0.1
+# ---------------------------------------------------------------------------------------
 
-if [ -n "$1" ]
-then
-	# user defined RDP_SCALE as command line parameter
-	case $1 in
-		100) ;&
-		140) ;&
-		180)
-			RDP_SCALE=$1
-			;;
-		*)
-			echo "The only supported RDP_SCALE parameters are 100, 140 and 180."
-			exit 1
-			;;
-	esac
-else
-	# try calculating good RDP_SCALE
-	RDP_SCALE=100
+set -e
 
-	# determine scaling
-	PRIMARY_DISPLAY="$(xrandr | grep -w "connected primary")"
-	printf "primary display:\\n%s\\n" "$PRIMARY_DISPLAY"
-	if [ -z "$PRIMARY_DISPLAY" ]
+evaluateRDPScale(){
+	local customScale=$1
+	local rdpScale=100
+	local primaryDisplay=""
+	local monitorWidth=0
+	local screenWidth=0
+	local dpi=0
+	local scale=0
+
+	if [ -n "$customScale" ]
 	then
-		echo "WARNINIG: primary display not found"
+		# user defined rdpScale as command line parameter
+		case $customScale in
+			100) ;&
+			140) ;&
+			180)
+				rdpScale=$customScale
+				;;
+			*)
+				echo "The only supported rdpScale parameters are 100, 140 and 180."
+				exit 1
+				;;
+		esac
 	else
-		MONITOR_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* \(.*\)mm x .*mm/\1/g')
-		echo "monitor width: $MONITOR_WIDTH mm"
-		if [ "$MONITOR_WIDTH" -eq 0 ]
+		# try calculating good RDP_SCALE
+		rdpScale=100
+
+		# determine scaling
+		primaryDisplay="$(xrandr | grep -w "connected primary")"
+		#printf "primary display:\\n%s\\n" "$primaryDisplay"
+		if [ -n "$primaryDisplay" ]
 		then
-			# seen in VirtualBox
-			echo "WARNINIG: unknown monitor width"
-		else
-			SCREEN_WIDTH=$(echo "$PRIMARY_DISPLAY" | sed 's/.* primary \(.*\)x.*+.*/\1/g')
-			echo "screen width: $SCREEN_WIDTH pixels"
-			DPI=$((SCREEN_WIDTH*254/MONITOR_WIDTH/10))
-			echo "DPI: $DPI"
-			SCALE=$(echo "scale=2; ${DPI}/96" | bc)
-			echo "scaling factor ($DPI/96): $SCALE"
-			if [ "$(echo "($SCALE > 1.4) && ($SCALE <= 1.8)" | bc -l)" -eq 1 ]
+			monitorWidth=$(echo "$primaryDisplay" | sed 's/.* \(.*\)mm x .*mm/\1/g')
+			#echo "monitor width: $monitorWidth mm"
+			if [ "$monitorWidth" -ne 0 ]
 			then
-				RDP_SCALE=140
-			elif [ "$(echo "$SCALE > 1.8" | bc -l)" -eq 1 ]
-			then
-				RDP_SCALE=180
+				screenWidth=$(echo "$primaryDisplay" | sed 's/.* primary \(.*\)x.*+.*/\1/g')
+				#echo "screen width: $screenWidth pixels"
+				dpi=$((screenWidth*254/monitorWidth/10))
+				#echo "dpi: $dpi"
+				scale=$(echo "scale=2; ${dpi}/96" | bc)
+				#echo "scaling factor ($dpi/96): $scale"
+				if [ "$(echo "($scale > 1.4) && ($scale <= 1.8)" | bc -l)" -eq 1 ]
+				then
+					rdpScale=140
+				elif [ "$(echo "$scale > 1.8" | bc -l)" -eq 1 ]
+				then
+					rdpScale=180
+				fi
 			fi
 		fi
 	fi
-fi
-echo "RDP_SCALE: $RDP_SCALE"
+	echo $rdpScale
+}
+
+checkSignature(){
+	local config="$1"
+	local signature="$2"
+	local publicKey="/usr/share/lernstick-rdp-exam/intermed-exam-ca.pubkey"
+
+	# check if signature file exists
+	if ! [ -f "$signature" ]
+	then
+		echo 1
+		return
+	fi
+
+	# check if public key exists
+	if ! [ -f "$publicKey" ]
+	then
+		echo 1
+		return
+	fi
+
+	# check signature of config
+	if ! echo -n "$config" | openssl dgst \
+		-verify "$publicKey" \
+		-sha256 \
+		-signature "$signature" >/dev/null 2>&1
+	then
+		# signature was invalid
+		echo 1
+	else
+		echo 0
+	fi
+}
+
+gatherAndSendStatistics(){
+	local instanceId="$1"
+	local instanceToken="$2"
+	local hasTPM="false"
+	local tpmVersion="none"
+	local resolution="none"
+	local product="none"
+
+	if [ -c /dev/tpm0 ];then
+		hasTPM="true"
+		tpmVersion="1.2"
+		if [ -c /dev/tpmrm0 ];then
+			tpmVersion="2.0"
+		fi
+	fi
+	resolution=$(xrandr 2>/dev/null 2>/dev/null \
+		| grep ' connected' \
+		| grep -oE "[0-9]+x[0-9]+" \
+		| tr -d "\n")
+	product="$(sudo lshw -quiet -c "system" \
+				| grep "product" \
+				| head -n1 \
+				| cut -d':' -f2 \
+				| sed -e 's/^ *//g' \
+				| sed -e 's/ *$//g' \
+				| tr -d "\n")"
+	echo "product=\"$product\""
+	echo "resolution=\"$resolution\""
+	echo "hasTPM=\"$hasTPM\""
+	echo "tpmVersion=\"$tpmVersion\""
+	curl \
+		--header "Content-Type: application/json" \
+		--request POST \
+		--data "{\"auth\":{\"id\":\"${instanceId}\",\"token\":\"${instanceToken}\"},\"hardware\":{\"display\":{\"resolution\":\"${resolution}\"},\"system\":{\"product\":\"${product}\"},\"tpm\":{\"enabled\":${hasTPM},\"version\":\"${tpmVersion}\"}}}" \
+		https://campla.adm.ds.fhnw.ch/rest/statistics/Hardware
+}
+
+parseJSONKey(){
+	local json="$1"
+	local key="$2"
+	local out
+	out=$(echo "$json" | jq ".${key}" | sed -E 's/(^"|"$)//g')
+	echo -n "$out"
+}
+
+loadConfiguration(){
+	local configZip="/home/user/Schreibtisch/exam.zip"
+	local jsonSchema="/usr/share/lernstick-rdp-exam/exam-conf-schema.json"
+	local signatureFile=""
+	local tmpDir="$1"
+	local config=""
+	local isValidSignature=1
+
+	# check if config is available
+	# give Firefox a short time span to finish the download
+	sleep 1
+	if [ ! -f "$configZip" ]
+	then
+		zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\\n\\nPlease download the exam configuration\\nto your desktop.")"
+		exit 1
+	fi
+
+	# extract config
+	if ! unzip -d "$tmpDir" "$configZip" >/dev/null 2>&1;
+	then
+		zenity --error --no-wrap --text "$(gettext "The exam configuration is invalid.\\n\\nPlease download the exam configuration\\nto your desktop.")"
+		exit 1
+	fi
+
+	# validate with json schema
+	if ! /usr/bin/jsonschema -i "$tmpDir/exam.config" "$jsonSchema";
+	then
+		zenity --error --no-wrap --text "$(gettext "The exam configuration is invalid.\\n\\nPlease download the exam configuration\\nto your desktop.")"
+		exit 1
+	fi
+
+	# load configuration
+	config=$(<"$tmpDir/exam.config")
+
+	# validate signature
+	signatureFile="${tmpDir}/exam.config.sig"
+	isValidSignature=$(checkSignature "$config" "$signatureFile")
+	if [ "$isValidSignature" = "1" ]
+	then
+		zenity --error --no-wrap --text "$(gettext "The signature of the exam configuration is invalid.")"
+		exit 1
+	fi
+
+	echo "$config"
+}
+
+startVMExamination(){
+	local config
+	config="$1"
+	local zenityPid
+	zenityPid=0
+	local instanceId
+	instanceId=$(parseJSONKey "$config" 'instance_id')
+	local instanceToken
+	instanceToken=$(parseJSONKey "$config" 'instance_token')
+	local vmServer
+	vmServer=$(parseJSONKey "$config" 'vm_server')
+	local vmUser
+	vmUser=$(parseJSONKey "$config" 'vm_user')
+	local vmPassword
+	vmPassword=$(parseJSONKey "$config" 'vm_password')
+
+	# send hardware statistics
+	gatherAndSendStatistics "$instanceId" "$instanceToken"
+
+	zenity --progress --pulsate --no-cancel --text "$(gettext "Starting exam, please wait...")" &
+	zenityPid=$!
+
+	# start RDP connection to exam server
+	xfreerdp \
+		-wallpaper \
+		/gdi:hw \
+		/f \
+		/scale:"$RDP_SCALE" \
+		/u:"${vmUser}" \
+		/p:"${vmPassword}" \
+		/v:"${vmServer}"
+
+	kill $zenityPid
+}
+
+startWebExamination(){
+	local config
+	config="$1"
+	local instanceId
+	instanceId=$(parseJSONKey "$config" 'instance_id')
+	local instanceToken
+	instanceToken=$(parseJSONKey "$config" 'instance_token')
+	local webUrl
+	webUrl=$(parseJSONKey "$config" 'web_url')
+	local proxyRegEx
+	proxyRegEx=$(parseJSONKey "$config" 'network_profile.proxy')
+
+	# send hardware statistics
+	gatherAndSendStatistics "$instanceId" "$instanceToken"
+
+	# TODO: Configure proxy
+
+	# start firefox in kiosk mode
+	/usr/bin/firefox --kisok --new-window "${webUrl}"
+}
+
+startDummyExamination(){
+	local config="$1"
+	zenity --info --no-wrap --text "$(gettext "Examination successful started.")"
+}
+
+startExamination(){
+	local config="$1"
+	local examType=""
+
+	examType=$(parseJSONKey "$config" 'exam_type')
+	case "$examType" in
+		"dummy")
+			startDummyExamination "$config"
+			;;
+		"web")
+			startWebExamination "$config"
+			;;
+		"vm")
+			startVMExamination "$config"
+			;;
+		*)
+			zenity --error --no-wrap --text "$(gettext "Unknown examination type.")"
+			exit 1
+			;;
+	esac
+}
 
 # gettext support
 . gettext.sh
 export TEXTDOMAIN=lernstick-rdp-start-exam
 
-# check if config is available
-CONFIG_ZIP="/home/user/Schreibtisch/exam.zip"
-# give Firefox a short time span to finish the download
-sleep 1
-if [ ! -f $CONFIG_ZIP ]
-then
-zenity --error --no-wrap --text "$(gettext "The exam configuration was not found.\\n\\nPlease download the exam configuration\\nto your desktop.")"
-	exit 1
-fi
+# evaluate rdp scale
+RDP_SCALE=$(evaluateRDPScale "$1")
+echo "RDP_SCALE: $RDP_SCALE"
 
-# extract config
+# load configuration
 TMP_DIR=$(mktemp -d)
-unzip -d "$TMP_DIR" "$CONFIG_ZIP"
-
-# parse config file
-CONFIG=$(<"$TMP_DIR/exam.config")
-declare -A EXAM_CONFIG
-while IFS='=' read -r KEY VALUE
-do
-	EXAM_CONFIG["$KEY"]="$VALUE"
-done <<< "$CONFIG"
+EXAM_CONFIG=$(loadConfiguration "$TMP_DIR")
 
 # open firewall
-sudo lernstick-rdp-open-firewall "$CONFIG" "$TMP_DIR/exam.config.sig"
+# TODO: Adaption to support new configuration format
+sudo lernstick-rdp-open-firewall "$EXAM_CONFIG" "$TMP_DIR/exam.config.sig"
 EXIT_CODE=$?
+
+# cleanup
+if [ -d "$TMP_DIR" ]
+then
+	rm -rf "$TMP_DIR"
+fi
 
 # error handling
 if [ $EXIT_CODE -eq 10 ]
@@ -92,48 +303,7 @@ then
 	exit 1
 fi
 
-zenity --progress --pulsate --no-cancel --text "$(gettext "Starting exam, please wait...")" &
-ZENITY_PID=$!
+# start examination according to the given configuration
+startExamination "$EXAM_CONFIG"
 
-# gather hardware statistics
-hasTPM="false"
-tpmVersion="none"
-if [ -c /dev/tpm0 ];then
-	hasTPM="true"
-	tpmVersion="1.2"
-	if [ -c /dev/tpmrm0 ];then
-		tpmVersion="2.0"
-	fi
-fi
-resolution=$(xrandr 2>/dev/null 2>/dev/null \
-	| grep ' connected' \
-	| grep -oE "[0-9]+x[0-9]+" \
-	| tr -d "\n")
-product="$(sudo lshw -quiet -c "system" \
-	| grep "product" \
-	| head -n1 \
-	| cut -d':' -f2 \
-	| sed -e 's/^ *//g' \
-	| sed -e 's/ *$//g' \
-	| tr -d "\n")"
-echo "product=\"$product\""
-echo "resolution=\"$resolution\""
-echo "hasTPM=\"$hasTPM\""
-echo "tpmVersion=\"$tpmVersion\""
-curl \
-	--header "Content-Type: application/json" \
-	--request POST \
-	--data "{\"auth\":{\"username\":\"${EXAM_CONFIG[USER]}\",\"password\":\"${EXAM_CONFIG[PASSWORD]}\"},\"hardware\":{\"display\":{\"resolution\":\"${resolution}\"},\"system\":{\"product\":\"${product}\"},\"tpm\":{\"enabled\":${hasTPM},\"version\":\"${tpmVersion}\"}}}" \
-	https://campla.adm.ds.fhnw.ch/rest/statistics/Hardware
-
-# start RDP connection to exam server
-xfreerdp \
-	-wallpaper \
-	/gdi:hw \
-	/f \
-	/scale:$RDP_SCALE \
-	/u:"${EXAM_CONFIG[USER]}" \
-	/p:"${EXAM_CONFIG[PASSWORD]}" \
-	/v:"${EXAM_CONFIG[SERVER]}"
-
-kill $ZENITY_PID
+exit 0
