@@ -7,6 +7,6 @@ Standards-Version: 3.7.3
 
 Package: lernstick-rdp-exam
 Architecture: all
-Depends: freerdp2-x11, gettext-base, iptables, lernstick-firewall, lshw, openssl, unzip, zenity
+Depends: freerdp2-x11, gettext-base, iptables, jq, lernstick-firewall, lshw, openssl, python3-jsonschema, unzip, zenity
 Description: Some scripts to start an exam via RDP
  Some scripts to start an exam via RDP
