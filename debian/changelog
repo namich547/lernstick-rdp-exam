@@ -1,3 +1,10 @@
+lernstick-rdp-exam (12) lernstick-11; urgency=medium
+
+  * [5f0270] don't use hardcoded paths
+  * [82bf5d] added package dependencies to jq and python3-jsonschema
+
+ -- Ronny Standtke <ronny.standtke@gmx.net>  Fri, 01 Oct 2021 08:47:23 +0200
+
 lernstick-rdp-exam (11) lernstick-11; urgency=medium
 
   * [070883] updated .gitignore file
