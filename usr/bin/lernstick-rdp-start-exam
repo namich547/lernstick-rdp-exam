@@ -164,7 +164,7 @@ loadConfiguration(){
 	fi
 
 	# validate with json schema
-	if ! /usr/bin/jsonschema -i "$tmpDir/exam.config" "$jsonSchema";
+	if ! jsonschema -i "$tmpDir/exam.config" "$jsonSchema";
 	then
 		zenity --error --no-wrap --text "$(gettext "The exam configuration is invalid.\\n\\nPlease download the exam configuration\\nto your desktop.")"
 		exit 1
@@ -238,7 +238,7 @@ startWebExamination(){
 	# TODO: Configure proxy
 
 	# start firefox in kiosk mode
-	/usr/bin/firefox --kisok --new-window "${webUrl}"
+	firefox --kisok --new-window "${webUrl}"
 }
 
 startDummyExamination(){
